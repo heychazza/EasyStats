@@ -1,0 +1,61 @@
+# EasyStats Configuration
+
+# Data retention period in days (default: 180 days / 6 months)
+retention_days: 180
+
+# Auto-save interval in minutes (default: 120 minutes / 2 hours)
+auto_save: 120
+
+# Database Settings
+database:
+  # Type of database to use (mysql or sqlite)
+  type: sqlite
+  
+  # MySQL Settings (ignored if using sqlite)
+  mysql:
+    host: localhost
+    port: 3306
+    database: easystats
+    username: root
+    password: password
+    pool:
+      maximum-pool-size: 10
+      minimum-idle: 5
+      idle-timeout: 300000
+      max-lifetime: 600000
+      connection-timeout: 5000
+
+  # SQLite Settings (ignored if using mysql)
+  sqlite:
+    file: database.db
+
+# Logging settings
+logging:
+  level: INFO
+  file: logs/easystats.log
+
+# Currency settings
+currency:
+  symbol: "$" # The currency symbol to use (e.g., $, €, £)
+  decimal_places: 2 # Number of decimal places to show for amounts 
+
+# Data retention settings (in days)
+data-retention:
+  # How long to keep platform statistics
+  platform-stats: 90
+  # How long to keep revenue data
+  revenue: 365
+  # How long to keep session data
+  sessions: 90
+
+# MaxMind GeoIP2 Configuration
+maxmind:
+  # Get a free license key at https://www.maxmind.com/en/geolite2/signup
+  license-key: ""
+
+# Plugin Messages
+messages:
+  prefix: "&8[&bEasyStats&8]&r"
+  no-permission: "&cYou don't have permission to use this command."
+  invalid-args: "&cInvalid arguments. Use &7/%command% help&c for usage."
+  player-only: "&cThis command can only be used by players." 

@@ -1,0 +1,44 @@
+name: EasyStats
+version: '${project.version}'
+main: gg.gianluca.easystats.EasyStats
+api-version: '1.20'
+authors: [Gianluca]
+description: A comprehensive statistics plugin for Minecraft servers
+softdepend: [floodgate, PlaceholderAPI]
+
+commands:
+  easystats:
+    description: Main command for EasyStats
+    usage: /easystats <subcommand> [args...]
+    aliases: [estats]
+    permission: easystats.use
+
+permissions:
+  easystats.*:
+    description: Gives access to all EasyStats commands
+    default: op
+    children:
+      easystats.platform: true
+      easystats.countries: true
+      easystats.revenue: true
+      easystats.campaign: true
+      easystats.session: true
+      easystats.reload: true
+  easystats.platform:
+    description: Allows access to platform statistics
+    default: op
+  easystats.countries:
+    description: Allows access to country statistics
+    default: op
+  easystats.revenue:
+    description: Allows access to revenue tracking
+    default: op
+  easystats.campaign:
+    description: Allows access to campaign management
+    default: op
+  easystats.reload:
+    description: Allows reloading the plugin configuration
+    default: op
+  easystats.session:
+    description: Allows access to session statistics
+    default: op 

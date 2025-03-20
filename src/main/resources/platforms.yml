@@ -1,0 +1,36 @@
+#IMPORTANT: To track Bedrock joins, please make sure that "forward-hostname" is "true" in your GeyserMC config
+#When you run the "/easystats platform view <platform>" it will show you both the Java and Bedrock player joins that came from that platform
+#You can also append a filter to show you how many joins occurred in a certain timeframe with "/easystats platform view <platform> -t 1h" for the last hour for example
+
+#"/easystats platform view tiktok" will show
+#Stats for tiktok:
+#Total: 15,000 (Java: 10,000 & Bedrock: 5,000)
+#Java: 10,000 (66.67%)
+#Bedrock: 5,000 (33.33%)
+
+#"/easystats platform compare main tiktok" will show
+#Comparison between main and tiktok:
+#Total: 65,000 (main: 50,000 & tiktok: 15,000)
+#Java: 50,000 (main: 40,000 & tiktok: 10,000)
+#Bedrock: 15,000 (main: 10,000 & tiktok: 5,000)
+#main is outperforming tiktok in total joins by 233.3%, Java joins by 300.0%, but is lacking in Bedrock joins by 100.0%
+
+# Platform hostname groupings
+# This file defines how different hostnames are grouped into platforms
+# Each platform can have multiple hostname patterns
+# Patterns can use wildcards (*) to match multiple hostnames
+
+platforms:
+  # Example groupings:
+  # - name: "Example Platform"
+  #   patterns:
+  #     - "example.com"
+  #     - "*.example.com"
+  #     - "sub.example.com"
+  
+  # Add your platform groupings here
+  # Each platform should have a name and a list of hostname patterns
+  'main':
+  - 'play.server.com'
+  'tiktok':
+  - 'tiktok.server.com' 
