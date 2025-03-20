@@ -44,6 +44,25 @@ public class DataManager {
                 stmt.execute();
             }
 
+            // Create campaign joins table
+            try (PreparedStatement stmt = conn.prepareStatement("""
+                CREATE TABLE IF NOT EXISTS campaign_joins (
+                    id INTEGER PRIMARY KEY AUTO_INCREMENT,
+                    campaign_id INTEGER NOT NULL,
+                    player_uuid VARCHAR(36) NOT NULL,
+                    join_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    client_type VARCHAR(10) NOT NULL,
+                    country VARCHAR(255),
+                    country_tier VARCHAR(10),
+                    FOREIGN KEY (campaign_id) REFERENCES campaigns(id),
+                    INDEX idx_campaign (campaign_id),
+                    INDEX idx_join_time (join_time),
+                    INDEX idx_player_uuid (player_uuid)
+                )
+            """)) {
+                stmt.execute();
+            }
+
             // Create revenue table
             try (PreparedStatement stmt = conn.prepareStatement("""
                 CREATE TABLE IF NOT EXISTS revenue (
@@ -343,16 +362,44 @@ public class DataManager {
     }
 
     public void recordJoin(UUID playerId, String hostname, String clientType) {
-        String query = """
-            INSERT INTO platform_stats (platform, player_uuid, client_type) 
-            VALUES (?, ?, ?)
-        """;
-        try (Connection conn = databaseFactory.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(query)) {
-            stmt.setString(1, hostname);
-            stmt.setString(2, playerId.toString());
-            stmt.setString(3, clientType);
-            stmt.executeUpdate();
+        try (Connection conn = databaseFactory.getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // Record in platform_stats
+                String platformQuery = """
+                    INSERT INTO platform_stats (platform, player_uuid, client_type) 
+                    VALUES (?, ?, ?)
+                """;
+                try (PreparedStatement stmt = conn.prepareStatement(platformQuery)) {
+                    stmt.setString(1, hostname);
+                    stmt.setString(2, playerId.toString());
+                    stmt.setString(3, clientType);
+                    stmt.executeUpdate();
+                }
+
+                // Record in campaign_joins if the hostname is part of an active campaign
+                String campaignQuery = """
+                    INSERT INTO campaign_joins (campaign_id, player_uuid, client_type)
+                    SELECT c.id, ?, ?
+                    FROM campaigns c
+                    JOIN campaign_hostnames ch ON c.id = ch.campaign_id
+                    WHERE ch.hostname = ?
+                    AND c.status = 'active'
+                """;
+                try (PreparedStatement stmt = conn.prepareStatement(campaignQuery)) {
+                    stmt.setString(1, playerId.toString());
+                    stmt.setString(2, clientType);
+                    stmt.setString(3, hostname);
+                    stmt.executeUpdate();
+                }
+
+                conn.commit();
+            } catch (SQLException e) {
+                conn.rollback();
+                throw e;
+            } finally {
+                conn.setAutoCommit(true);
+            }
         } catch (SQLException e) {
             plugin.getLogger().log(Level.SEVERE, "Failed to record player join", e);
         }
@@ -537,5 +584,65 @@ public class DataManager {
             plugin.getLogger().log(Level.SEVERE, "Failed to get campaign metrics", e);
         }
         return metrics;
+    }
+
+    public List<String> getAllHostnames() {
+        List<String> hostnames = new ArrayList<>();
+        String query = "SELECT DISTINCT platform FROM platform_stats";
+        try (Connection conn = databaseFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query);
+             ResultSet rs = stmt.executeQuery()) {
+            while (rs.next()) {
+                hostnames.add(rs.getString("platform"));
+            }
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to get all hostnames", e);
+        }
+        return hostnames;
+    }
+
+    public Map<String, Long> getCampaignJoinStats(String campaignName, String timeFilter) {
+        Map<String, Long> stats = new HashMap<>();
+        String query = timeFilter != null
+            ? """
+                SELECT 
+                    client_type,
+                    COUNT(*) as count
+                FROM campaign_joins cj
+                JOIN campaigns c ON cj.campaign_id = c.id
+                WHERE c.name = ?
+                AND cj.join_time >= DATE_SUB(NOW(), INTERVAL ? DAY)
+                GROUP BY client_type
+              """
+            : """
+                SELECT 
+                    client_type,
+                    COUNT(*) as count
+                FROM campaign_joins cj
+                JOIN campaigns c ON cj.campaign_id = c.id
+                WHERE c.name = ?
+                GROUP BY client_type
+              """;
+
+        try (Connection conn = databaseFactory.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(query)) {
+            stmt.setString(1, campaignName);
+            if (timeFilter != null) {
+                stmt.setString(2, timeFilter.replace("d", ""));
+            }
+            ResultSet rs = stmt.executeQuery();
+
+            long total = 0;
+            while (rs.next()) {
+                String clientType = rs.getString("client_type");
+                long count = rs.getLong("count");
+                stats.put(clientType.toLowerCase(), count);
+                total += count;
+            }
+            stats.put("total", total);
+        } catch (SQLException e) {
+            plugin.getLogger().log(Level.SEVERE, "Failed to get campaign join stats", e);
+        }
+        return stats;
     }
 } 

@@ -10,7 +10,7 @@ buildNumber.properties
 .mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 
-# IntelliJ IDEA
+# IDE
 .idea/
 *.iws
 *.iml
@@ -88,8 +88,23 @@ $RECYCLE.BIN/
 
 # Plugin-specific
 # GeoIP database files
-GeoLite2-*.mmdb
+GeoLite2-Country.mmdb
 
 # Configuration files that might contain sensitive information
 config.yml
-!src/main/resources/config.yml 
+!src/main/resources/config.yml
+
+# Compiled files
+*.class
+*.jar
+*.war
+*.ear
+
+# Logs
+*.log
+logs/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3 

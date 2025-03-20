@@ -2,14 +2,20 @@ package gg.gianluca.easystats;
 
 import gg.gianluca.easystats.api.EasyStatsAPI;
 import gg.gianluca.easystats.api.EasyStatsAPIImpl;
-import gg.gianluca.easystats.command.subcommands.EasyStatsCommand;
+import gg.gianluca.easystats.command.base.BaseCommand;
+import gg.gianluca.easystats.command.subcommands.*;
 import gg.gianluca.easystats.data.DataManager;
+import gg.gianluca.easystats.database.DatabaseFactory;
 import gg.gianluca.easystats.expansion.EasyStatsExpansion;
-import gg.gianluca.easystats.session.SessionManager;
 import gg.gianluca.easystats.listener.PlayerListener;
+import gg.gianluca.easystats.session.SessionManager;
 import gg.gianluca.easystats.util.DependencyManager;
 import gg.gianluca.easystats.util.GeoIPManager;
+import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.HashMap;
+import java.util.Map;
 
 public class EasyStats extends JavaPlugin {
     private DataManager dataManager;
@@ -17,21 +23,19 @@ public class EasyStats extends JavaPlugin {
     private EasyStatsAPI api;
     private DependencyManager dependencyManager;
     private GeoIPManager geoIPManager;
+    private final Map<String, BaseCommand> subcommands = new HashMap<>();
 
     @Override
     public void onEnable() {
         // Save default config
         saveDefaultConfig();
 
-        // Initialize GeoIP
-        geoIPManager = new GeoIPManager(this);
-        geoIPManager.initialize();
-
         // Initialize managers
         this.dependencyManager = new DependencyManager(this);
         this.dataManager = new DataManager(this);
         this.sessionManager = new SessionManager();
         this.api = new EasyStatsAPIImpl(this);
+        this.geoIPManager = new GeoIPManager(this);
 
         // Register commands
         getCommand("easystats").setExecutor(new EasyStatsCommand(this));
@@ -41,9 +45,19 @@ public class EasyStats extends JavaPlugin {
 
         // Register PlaceholderAPI expansion if available
         if (dependencyManager.isPlaceholderAPIEnabled()) {
-            new EasyStatsExpansion(this).register();
+            PlaceholderExpansion expansion = new EasyStatsExpansion(this);
+            expansion.register();
             getLogger().info("PlaceholderAPI expansion registered successfully!");
         }
+
+        // Register subcommands
+        subcommands.put("reload", new ReloadCommand(this));
+        subcommands.put("platform", new PlatformCommand(this));
+        subcommands.put("countries", new CountriesCommand(this));
+        subcommands.put("revenue", new RevenueCommand(this));
+        subcommands.put("campaign", new CampaignCommand(this));
+        subcommands.put("session", new SessionCommand(this));
+        subcommands.put("export", new ExportCommand(this));
     }
 
     @Override

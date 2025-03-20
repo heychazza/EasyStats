@@ -31,7 +31,7 @@ permissions:
     description: Allows access to country statistics
     default: op
   easystats.revenue:
-    description: Allows access to revenue tracking
+    description: Allows using revenue-related commands
     default: op
   easystats.campaign:
     description: Allows access to campaign management
@@ -41,4 +41,7 @@ permissions:
     default: op
   easystats.session:
     description: Allows access to session statistics
+    default: op
+  easystats.export:
+    description: Allows exporting statistics data
     default: op 

@@ -39,7 +39,7 @@ public class CampaignCommand extends BaseCommand {
                 handleCreate(sender, campaignName, args[2], args[3], args[4], args[5], Double.parseDouble(args[6]));
                 break;
             case "view":
-                handleView(sender, campaignName);
+                handleView(sender, args);
                 break;
             case "list":
                 handleList(sender);
@@ -80,38 +80,59 @@ public class CampaignCommand extends BaseCommand {
         }
     }
 
-    private void handleView(CommandSender sender, String campaignName) {
-        Map<String, Object> campaign = dataManager.getCampaign(campaignName);
-        if (campaign == null) {
-            sender.sendMessage(ChatColor.RED + "Campaign not found!");
+    private void handleView(CommandSender sender, String[] args) {
+        if (args.length < 3) {
+            sender.sendMessage(ChatColor.RED + "Usage: /easystats campaign view <name> [timeFilter]");
             return;
         }
 
-        double cost = (Double) campaign.get("cost");
-        double revenue = (Double) campaign.get("total_revenue");
-        double profit = revenue - cost;
-        double roi = cost > 0 ? (profit / cost) * 100 : 0;
-
-        sender.sendMessage(ChatColor.GOLD + "=== Campaign Details ===");
-        sender.sendMessage(ChatColor.YELLOW + "Name: " + campaign.get("name"));
-        sender.sendMessage(ChatColor.YELLOW + "Description: " + campaign.get("description"));
-        sender.sendMessage(ChatColor.YELLOW + "Start Date: " + campaign.get("start_date"));
-        sender.sendMessage(ChatColor.YELLOW + "End Date: " + campaign.get("end_date"));
-        sender.sendMessage(ChatColor.YELLOW + "Currency: " + campaign.get("currency"));
-        sender.sendMessage(ChatColor.YELLOW + "Cost: " + String.format("%.2f", cost));
-        sender.sendMessage(ChatColor.YELLOW + "Total Revenue: " + String.format("%.2f", revenue));
-        sender.sendMessage(ChatColor.YELLOW + "Profit: " + String.format("%.2f", profit));
-        sender.sendMessage(ChatColor.YELLOW + "ROI: " + String.format("%.2f%%", roi));
-        sender.sendMessage(ChatColor.YELLOW + "Status: " + campaign.get("status"));
-
-        // Display hostnames
-        List<String> hostnames = dataManager.getCampaignHostnames(campaignName);
-        if (!hostnames.isEmpty()) {
-            sender.sendMessage(ChatColor.YELLOW + "Hostnames:");
-            for (String hostname : hostnames) {
-                sender.sendMessage(ChatColor.YELLOW + "  - " + hostname);
-            }
+        String name = args[2];
+        String timeFilter = args.length > 3 ? args[3] : null;
+        Map<String, Object> campaign = dataManager.getCampaign(name);
+        
+        if (campaign == null) {
+            sender.sendMessage(ChatColor.RED + "Campaign not found: " + name);
+            return;
         }
+
+        // Get campaign metrics
+        Map<String, Double> metrics = dataManager.getCampaignMetrics(name);
+        double cost = metrics.getOrDefault("cost", 0.0);
+        double revenue = metrics.getOrDefault("revenue", 0.0);
+        double profit = metrics.getOrDefault("profit", 0.0);
+        double roi = metrics.getOrDefault("roi", 0.0);
+
+        // Get campaign join stats
+        Map<String, Long> joinStats = dataManager.getCampaignJoinStats(name, timeFilter);
+        long totalJoins = joinStats.getOrDefault("total", 0L);
+        long javaJoins = joinStats.getOrDefault("java", 0L);
+        long bedrockJoins = joinStats.getOrDefault("bedrock", 0L);
+
+        // Get campaign hostnames
+        List<String> hostnames = dataManager.getCampaignHostnames(name);
+
+        // Format dates
+        String startDate = campaign.get("start_date").toString();
+        String endDate = campaign.get("end_date").toString();
+        String status = campaign.get("status").toString();
+        String currency = campaign.get("currency").toString();
+
+        // Build message
+        StringBuilder message = new StringBuilder();
+        message.append(ChatColor.GOLD).append("=== Campaign: ").append(name).append(" ===\n");
+        message.append(ChatColor.YELLOW).append("Description: ").append(ChatColor.WHITE).append(campaign.get("description")).append("\n");
+        message.append(ChatColor.YELLOW).append("Status: ").append(ChatColor.WHITE).append(status).append("\n");
+        message.append(ChatColor.YELLOW).append("Period: ").append(ChatColor.WHITE).append(startDate).append(" to ").append(endDate).append("\n");
+        message.append(ChatColor.YELLOW).append("Hostnames: ").append(ChatColor.WHITE).append(String.join(", ", hostnames)).append("\n");
+        message.append(ChatColor.YELLOW).append("Cost: ").append(ChatColor.WHITE).append(String.format("%.2f %s", cost, currency)).append("\n");
+        message.append(ChatColor.YELLOW).append("Revenue: ").append(ChatColor.WHITE).append(String.format("%.2f %s", revenue, currency)).append("\n");
+        message.append(ChatColor.YELLOW).append("Profit: ").append(ChatColor.WHITE).append(String.format("%.2f %s", profit, currency)).append("\n");
+        message.append(ChatColor.YELLOW).append("ROI: ").append(ChatColor.WHITE).append(String.format("%.2f%%", roi)).append("\n");
+        message.append(ChatColor.YELLOW).append("Total Joins: ").append(ChatColor.WHITE).append(totalJoins).append("\n");
+        message.append(ChatColor.YELLOW).append("Java Joins: ").append(ChatColor.WHITE).append(javaJoins).append("\n");
+        message.append(ChatColor.YELLOW).append("Bedrock Joins: ").append(ChatColor.WHITE).append(bedrockJoins);
+
+        sender.sendMessage(message.toString());
     }
 
     private void handleList(CommandSender sender) {
@@ -184,7 +205,7 @@ public class CampaignCommand extends BaseCommand {
     private void sendHelp(CommandSender sender) {
         sender.sendMessage(ChatColor.GOLD + "=== Campaign Commands ===");
         sender.sendMessage(ChatColor.YELLOW + "/easystats campaign create <name> <description> <start_date> <end_date> <currency> <cost> - Create a campaign");
-        sender.sendMessage(ChatColor.YELLOW + "/easystats campaign view <name> - View campaign details");
+        sender.sendMessage(ChatColor.YELLOW + "/easystats campaign view <name> [timeFilter] - View campaign details");
         sender.sendMessage(ChatColor.YELLOW + "/easystats campaign list - List all campaigns");
         sender.sendMessage(ChatColor.YELLOW + "/easystats campaign end <name> - End a campaign");
         sender.sendMessage(ChatColor.YELLOW + "/easystats campaign addhostname <name> <hostname> - Add hostname to campaign");

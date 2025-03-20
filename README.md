@@ -171,6 +171,96 @@ Example: /easystats reload
 Output: Configuration reloaded successfully!
 ```
 
+### Export Commands
+```
+/easystats export <name> <timeframe> - Export all statistics data to a JSON file
+```
+
+**Permission:** `easystats.export` (default: op)
+
+**Parameters:**
+- `name`: The name of the export file (will be saved as `name.json`)
+- `timeframe`: Time period to export data for (e.g., 7d, 30d, 90d, 180d, 365d)
+
+**Example:**
+```
+/easystats export monthly_report 30d
+```
+
+This will create a file named `monthly_report.json` in the `plugins/EasyStats/exports` directory containing statistics for the last 30 days.
+
+**Sample Export Data:**
+```json
+{
+    "export_date": "2024-03-20T15:30:00",
+    "timeframe": "30d",
+    "timeframe_days": "30",
+    "platform_stats": {
+        "play.example.com": {
+            "total": 1500,
+            "java": 1000,
+            "bedrock": 500
+        },
+        "mc.example.com": {
+            "total": 2000,
+            "java": 1500,
+            "bedrock": 500
+        }
+    },
+    "revenue_stats": {
+        "play.example.com": {
+            "USD": 1500.00,
+            "EUR": 1200.00
+        },
+        "mc.example.com": {
+            "USD": 2000.00,
+            "EUR": 1600.00
+        }
+    },
+    "session_stats": {
+        "play.example.com": {
+            "average_time_seconds": 3600,
+            "average_time_formatted": "1h 0m 0s"
+        },
+        "mc.example.com": {
+            "average_time_seconds": 5400,
+            "average_time_formatted": "1h 30m 0s"
+        }
+    },
+    "campaigns": [
+        {
+            "name": "summer_2024",
+            "description": "Summer promotion campaign",
+            "start_date": "2024-06-01",
+            "end_date": "2024-08-31",
+            "currency": "USD",
+            "cost": 5000.00,
+            "total_revenue": 7500.00,
+            "profit": 2500.00,
+            "roi": 50.00,
+            "status": "active",
+            "hostnames": ["play.example.com", "mc.example.com"],
+            "join_stats": {
+                "total": 3500,
+                "java": 2500,
+                "bedrock": 1000
+            }
+        }
+    ]
+}
+```
+
+The export file includes:
+- Export metadata (date, timeframe)
+- Platform statistics for the specified timeframe (total, Java, and Bedrock joins)
+- Revenue statistics by platform and currency for the specified timeframe
+- Session statistics (average session time in seconds and formatted)
+- Campaign information including:
+  - Basic details (name, description, dates, currency)
+  - Financial metrics (cost, revenue, profit, ROI)
+  - Associated hostnames
+  - Join statistics for the specified timeframe (total, Java, and Bedrock joins)
+
 ## Permissions
 
 ```yaml
@@ -183,6 +273,7 @@ easystats.*:
     easystats.campaign: true
     easystats.session: true
     easystats.reload: true
+    easystats.export: true
 
 easystats.platform:
   description: Access to platform statistics
@@ -206,6 +297,10 @@ easystats.session:
 
 easystats.reload:
   description: Ability to reload configuration
+  default: op
+
+easystats.export:
+  description: Access to export commands
   default: op
 ```
 
