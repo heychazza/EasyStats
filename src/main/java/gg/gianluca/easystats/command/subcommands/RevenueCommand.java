@@ -16,7 +16,7 @@ public class RevenueCommand extends BaseCommand {
     private final DataManager dataManager;
 
     public RevenueCommand(EasyStats plugin) {
-        super(plugin, "easystats.revenue");
+        super(plugin, "revenue", "/easystats revenue <view|add> <platform> [amount] [currency]", "Manage revenue statistics");
         this.dataManager = plugin.getDataManager();
     }
 

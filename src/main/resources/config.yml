@@ -6,6 +6,12 @@ retention_days: 180
 # Auto-save interval in minutes (default: 120 minutes / 2 hours)
 auto_save: 120
 
+# Player count tracking settings
+player_count:
+  # How often to record player count (in minutes)
+  # Default: 15 minutes
+  record_interval: 15
+
 # Database Settings
 database:
   # Type of database to use (mysql or sqlite)

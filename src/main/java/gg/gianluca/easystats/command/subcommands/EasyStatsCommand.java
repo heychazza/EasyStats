@@ -16,7 +16,7 @@ public class EasyStatsCommand extends BaseCommand {
     private final Map<String, BaseCommand> subcommands;
 
     public EasyStatsCommand(EasyStats plugin) {
-        super(plugin, "easystats");
+        super(plugin, "easystats", "/easystats help", "Main command for EasyStats");
         this.subcommands = new HashMap<>();
         
         // Register subcommands

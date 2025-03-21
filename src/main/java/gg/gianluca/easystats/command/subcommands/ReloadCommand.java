@@ -14,7 +14,7 @@ public class ReloadCommand extends BaseCommand {
     private final EasyStats plugin;
 
     public ReloadCommand(EasyStats plugin) {
-        super(plugin, "easystats.reload");
+        super(plugin, "reload", "/easystats reload", "Reload the plugin configuration");
         this.plugin = plugin;
     }
 

@@ -24,6 +24,7 @@ permissions:
       easystats.campaign: true
       easystats.session: true
       easystats.reload: true
+      easystats.playercount: true
   easystats.platform:
     description: Allows access to platform statistics
     default: op
@@ -44,4 +45,7 @@ permissions:
     default: op
   easystats.export:
     description: Allows exporting statistics data
+    default: op
+  easystats.playercount:
+    description: Access to player count statistics
     default: op 

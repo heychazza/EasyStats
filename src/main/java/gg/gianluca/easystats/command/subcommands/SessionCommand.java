@@ -16,7 +16,7 @@ public class SessionCommand extends BaseCommand {
     private final SessionManager sessionManager;
 
     public SessionCommand(EasyStats plugin) {
-        super(plugin, "easystats.session");
+        super(plugin, "session", "/easystats session view <platform> [-t <time>]", "View session statistics");
         this.sessionManager = plugin.getSessionManager();
     }
 

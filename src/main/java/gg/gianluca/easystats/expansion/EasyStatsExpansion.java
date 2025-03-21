@@ -81,21 +81,15 @@ public class EasyStatsExpansion extends PlaceholderExpansion {
     private String handleCountryPlaceholder(String platform, String[] args) {
         if (args.length < 4) return null;
 
-        Map<String, Map<String, Long>> stats = api.getCountryStats(platform, null);
+        Map<String, Map<String, Map<String, Long>>> stats = api.getCountryStats(platform, null);
         String tier = args[2].toUpperCase();
-        String stat = args[3].toLowerCase();
+        String country = args[3].toUpperCase();
 
-        Map<String, Long> tierStats = stats.getOrDefault(tier, Map.of());
-        switch (stat) {
-            case "total":
-                return String.valueOf(tierStats.getOrDefault("total", 0L));
-            case "java":
-                return String.valueOf(tierStats.getOrDefault("java", 0L));
-            case "bedrock":
-                return String.valueOf(tierStats.getOrDefault("bedrock", 0L));
-            default:
-                return null;
+        if (stats.containsKey(tier) && stats.get(tier).containsKey(country)) {
+            Map<String, Long> clientStats = stats.get(tier).get(country);
+            return String.valueOf(clientStats.values().stream().mapToLong(Long::longValue).sum());
         }
+        return "0";
     }
 
     private String handleRevenuePlaceholder(String platform, String[] args) {

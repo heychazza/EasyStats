@@ -261,6 +261,149 @@ The export file includes:
   - Associated hostnames
   - Join statistics for the specified timeframe (total, Java, and Bedrock joins)
 
+### Player Count Statistics
+
+```
+/easystats playercount view <platform> [-all]
+Permission: easystats.playercount
+Example: /easystats playercount view lobby
+Output:
+=== Player Count Statistics for 'lobby' ===
+Current Players: 45
+
+Average Players:
+Last 24h: 38
+Last 7d: 42
+Last 14d: 40
+Last 30d: 39
+
+Peak Players: 156
+Peak Time: 2024-03-15 18:30:00
+
+Example: /easystats playercount view -all
+Output:
+=== Player Count Statistics for 'All Platforms' ===
+Current Players: 123
+
+Average Players:
+Last 24h: 98
+Last 7d: 105
+Last 14d: 108
+Last 30d: 102
+
+Peak Players: 456
+Peak Time: 2024-03-15 18:30:00
+```
+
+The player count command shows:
+- Current number of players online
+- Average player count over different time periods (24h, 7d, 14d, 30d)
+- Peak player count and when it occurred
+
+Use the `-all` option to view statistics across all platforms combined.
+
+### Player Count Statistics
+```java
+// Get platform-specific player count stats
+Map<String, Object> stats = api.getPlayerCountStats("lobby");
+int current = (int) stats.get("current");
+double avg24h = (double) stats.get("avg_24h");
+double avg7d = (double) stats.get("avg_7d");
+double avg14d = (double) stats.get("avg_14d");
+double avg30d = (double) stats.get("avg_30d");
+int peak = (int) stats.get("peak_count");
+String peakTime = (String) stats.get("peak_time");
+
+// Get global player count stats
+Map<String, Object> globalStats = api.getGlobalPlayerCountStats();
+int globalCurrent = (int) globalStats.get("current");
+double globalAvg24h = (double) globalStats.get("avg_24h");
+// ... etc
+```
+
+### Player Count Placeholders
+```
+%easystats_playercount_<platform>_current% - Current player count
+Example: %easystats_playercount_lobby_current% → 45
+
+%easystats_playercount_<platform>_24h% - 24-hour average
+Example: %easystats_playercount_lobby_24h% → 38
+
+%easystats_playercount_<platform>_7d% - 7-day average
+Example: %easystats_playercount_lobby_7d% → 42
+
+%easystats_playercount_<platform>_14d% - 14-day average
+Example: %easystats_playercount_lobby_14d% → 40
+
+%easystats_playercount_<platform>_30d% - 30-day average
+Example: %easystats_playercount_lobby_30d% → 39
+
+%easystats_playercount_<platform>_peak% - Peak player count
+Example: %easystats_playercount_lobby_peak% → 156
+
+%easystats_playercount_<platform>_peak_time% - Peak time
+Example: %easystats_playercount_lobby_peak_time% → 2024-03-15 18:30:00
+
+%easystats_globalplayercount_current% - Global current player count
+Example: %easystats_globalplayercount_current% → 123
+
+%easystats_globalplayercount_24h% - Global 24-hour average
+Example: %easystats_globalplayercount_24h% → 98
+
+%easystats_globalplayercount_7d% - Global 7-day average
+Example: %easystats_globalplayercount_7d% → 105
+
+%easystats_globalplayercount_14d% - Global 14-day average
+Example: %easystats_globalplayercount_14d% → 108
+
+%easystats_globalplayercount_30d% - Global 30-day average
+Example: %easystats_globalplayercount_30d% → 102
+
+%easystats_globalplayercount_peak% - Global peak player count
+Example: %easystats_globalplayercount_peak% → 456
+
+%easystats_globalplayercount_peak_time% - Global peak time
+Example: %easystats_globalplayercount_peak_time% → 2024-03-15 18:30:00
+```
+
+### Player Count Command Usage Examples
+```
+# View player count for a specific platform
+/easystats playercount view lobby
+Output:
+=== Player Count Statistics for 'lobby' ===
+Current Players: 45
+
+Average Players:
+Last 24h: 38
+Last 7d: 42
+Last 14d: 40
+Last 30d: 39
+
+Peak Players: 156
+Peak Time: 2024-03-15 18:30:00
+
+# View global player count across all platforms
+/easystats playercount view -all
+Output:
+=== Player Count Statistics for 'All Platforms' ===
+Current Players: 123
+
+Average Players:
+Last 24h: 98
+Last 7d: 105
+Last 14d: 108
+Last 30d: 102
+
+Peak Players: 456
+Peak Time: 2024-03-15 18:30:00
+
+# Using with placeholders in a scoreboard
+Current Players: %easystats_playercount_lobby_current%
+24h Average: %easystats_playercount_lobby_24h%
+Global Players: %easystats_globalplayercount_current%
+```
+
 ## Permissions
 
 ```yaml

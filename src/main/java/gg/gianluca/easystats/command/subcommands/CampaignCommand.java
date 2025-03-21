@@ -6,6 +6,7 @@ import gg.gianluca.easystats.data.DataManager;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
+import org.bukkit.command.TabCompleter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,7 +17,7 @@ public class CampaignCommand extends BaseCommand {
     private final DataManager dataManager;
 
     public CampaignCommand(EasyStats plugin) {
-        super(plugin, "easystats.campaign");
+        super(plugin, "campaign", "/easystats campaign <create|info|end|addhost|removehost> <name> [args...]", "Manage campaigns");
         this.dataManager = plugin.getDataManager();
     }
 
@@ -64,6 +65,15 @@ public class CampaignCommand extends BaseCommand {
             case "listhostnames":
                 handleListHostnames(sender, campaignName);
                 break;
+            case "info":
+                handleInfo(sender, args);
+                break;
+            case "addhost":
+                handleAddHost(sender, args);
+                break;
+            case "removehost":
+                handleRemoveHost(sender, args);
+                break;
             default:
                 sendHelp(sender);
                 break;
@@ -96,11 +106,11 @@ public class CampaignCommand extends BaseCommand {
         }
 
         // Get campaign metrics
-        Map<String, Double> metrics = dataManager.getCampaignMetrics(name);
-        double cost = metrics.getOrDefault("cost", 0.0);
-        double revenue = metrics.getOrDefault("revenue", 0.0);
-        double profit = metrics.getOrDefault("profit", 0.0);
-        double roi = metrics.getOrDefault("roi", 0.0);
+        Map<String, Object> metrics = dataManager.getCampaignMetrics(name);
+        double cost = ((Number) metrics.getOrDefault("cost", 0.0)).doubleValue();
+        double revenue = ((Number) metrics.getOrDefault("revenue", 0.0)).doubleValue();
+        double profit = revenue - cost;
+        double roi = cost > 0 ? (profit / cost) * 100 : 0;
 
         // Get campaign join stats
         Map<String, Long> joinStats = dataManager.getCampaignJoinStats(name, timeFilter);
@@ -202,6 +212,55 @@ public class CampaignCommand extends BaseCommand {
         }
     }
 
+    private void handleInfo(CommandSender sender, String[] args) {
+        if (args.length < 2) {
+            sender.sendMessage(ChatColor.RED + "Usage: /easystats campaign info <name>");
+            return;
+        }
+
+        String name = args[1];
+        Map<String, Object> campaign = dataManager.getCampaign(name);
+        if (campaign == null) {
+            sender.sendMessage(ChatColor.RED + "Campaign not found.");
+            return;
+        }
+
+        Map<String, Object> metrics = dataManager.getCampaignMetrics(name);
+        sender.sendMessage(ChatColor.GREEN + "Campaign Information:");
+        sender.sendMessage(ChatColor.YELLOW + "Name: " + campaign.get("name"));
+        sender.sendMessage(ChatColor.YELLOW + "Description: " + campaign.get("description"));
+        sender.sendMessage(ChatColor.YELLOW + "Start Date: " + campaign.get("start_date"));
+        sender.sendMessage(ChatColor.YELLOW + "End Date: " + (campaign.get("end_date") != null ? campaign.get("end_date") : "Ongoing"));
+        sender.sendMessage(ChatColor.YELLOW + "Hostname: " + campaign.get("hostname"));
+        sender.sendMessage(ChatColor.YELLOW + "Budget: $" + campaign.get("budget"));
+        sender.sendMessage(ChatColor.YELLOW + "Total Joins: " + metrics.get("total_joins"));
+        sender.sendMessage(ChatColor.YELLOW + "Unique Players: " + metrics.get("unique_players"));
+    }
+
+    private void handleAddHost(CommandSender sender, String[] args) {
+        if (args.length < 3) {
+            sender.sendMessage(ChatColor.RED + "Usage: /easystats campaign addhost <name> <hostname>");
+            return;
+        }
+
+        String name = args[1];
+        String hostname = args[2];
+        dataManager.addHostnameToCampaign(name, hostname);
+        sender.sendMessage(ChatColor.GREEN + "Successfully added hostname to campaign.");
+    }
+
+    private void handleRemoveHost(CommandSender sender, String[] args) {
+        if (args.length < 3) {
+            sender.sendMessage(ChatColor.RED + "Usage: /easystats campaign removehost <name> <hostname>");
+            return;
+        }
+
+        String name = args[1];
+        String hostname = args[2];
+        dataManager.removeHostnameFromCampaign(name, hostname);
+        sender.sendMessage(ChatColor.GREEN + "Successfully removed hostname from campaign.");
+    }
+
     private void sendHelp(CommandSender sender) {
         sender.sendMessage(ChatColor.GOLD + "=== Campaign Commands ===");
         sender.sendMessage(ChatColor.YELLOW + "/easystats campaign create <name> <description> <start_date> <end_date> <currency> <cost> - Create a campaign");
@@ -211,12 +270,15 @@ public class CampaignCommand extends BaseCommand {
         sender.sendMessage(ChatColor.YELLOW + "/easystats campaign addhostname <name> <hostname> - Add hostname to campaign");
         sender.sendMessage(ChatColor.YELLOW + "/easystats campaign removehostname <name> <hostname> - Remove hostname from campaign");
         sender.sendMessage(ChatColor.YELLOW + "/easystats campaign listhostnames <name> - List campaign hostnames");
+        sender.sendMessage(ChatColor.YELLOW + "/easystats campaign info <name> - View campaign information");
+        sender.sendMessage(ChatColor.YELLOW + "/easystats campaign addhost <name> <hostname> - Add hostname to campaign");
+        sender.sendMessage(ChatColor.YELLOW + "/easystats campaign removehost <name> <hostname> - Remove hostname from campaign");
     }
 
     @Override
     public List<String> tabComplete(CommandSender sender, Command command, String alias, String[] args) {
         if (args.length == 1) {
-            return Arrays.asList("create", "view", "list", "end", "addhostname", "removehostname", "listhostnames");
+            return Arrays.asList("create", "view", "list", "end", "addhostname", "removehostname", "listhostnames", "info", "addhost", "removehost");
         }
         return null;
     }

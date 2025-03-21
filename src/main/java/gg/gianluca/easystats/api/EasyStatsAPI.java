@@ -10,8 +10,8 @@ public interface EasyStatsAPI {
     Map<String, Long> comparePlatforms(String platform1, String platform2);
 
     // Country Statistics
-    Map<String, Map<String, Long>> getCountryStats(String platform, String timeFilter);
-    Map<String, Map<String, Long>> compareCountries(String platform1, String platform2);
+    Map<String, Map<String, Map<String, Long>>> getCountryStats(String platform, String timeFilter);
+    Map<String, Map<String, Map<String, Long>>> compareCountries(String platform1, String platform2);
 
     // Revenue Statistics
     Map<String, Double> getRevenueStats(String platform, String timeFilter);
@@ -32,6 +32,10 @@ public interface EasyStatsAPI {
     Map<String, Double> compareSessionTimes(String hostname1, String hostname2);
     void startSession(UUID playerId, String hostname);
     void endSession(UUID playerId, String hostname);
+
+    // Player Count Statistics
+    Map<String, Object> getPlayerCountStats(String platform);
+    Map<String, Object> getGlobalPlayerCountStats();
 
     // Utility Methods
     String formatDuration(long milliseconds);

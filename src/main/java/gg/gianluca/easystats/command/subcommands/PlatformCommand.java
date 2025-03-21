@@ -16,7 +16,7 @@ public class PlatformCommand extends BaseCommand {
     private final DataManager dataManager;
 
     public PlatformCommand(EasyStats plugin) {
-        super(plugin, "easystats.platform");
+        super(plugin, "platform", "/easystats platform <add|remove> <name>", "Manage platforms");
         this.dataManager = plugin.getDataManager();
     }
 

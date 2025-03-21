@@ -11,10 +11,14 @@ import java.util.List;
 public abstract class BaseCommand implements CommandExecutor, TabCompleter {
     protected final EasyStats plugin;
     protected final String permission;
+    protected final String usage;
+    protected final String description;
 
-    public BaseCommand(EasyStats plugin, String permission) {
+    public BaseCommand(EasyStats plugin, String permission, String usage, String description) {
         this.plugin = plugin;
         this.permission = permission;
+        this.usage = usage;
+        this.description = description;
     }
 
     @Override
@@ -36,4 +40,16 @@ public abstract class BaseCommand implements CommandExecutor, TabCompleter {
 
     public abstract boolean execute(CommandSender sender, Command command, String label, String[] args);
     public abstract List<String> tabComplete(CommandSender sender, Command command, String alias, String[] args);
+
+    public String getPermission() {
+        return permission;
+    }
+
+    public String getUsage() {
+        return usage;
+    }
+
+    public String getDescription() {
+        return description;
+    }
 } 

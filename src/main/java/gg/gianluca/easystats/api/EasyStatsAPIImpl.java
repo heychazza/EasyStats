@@ -46,54 +46,55 @@ public class EasyStatsAPIImpl implements EasyStatsAPI {
     }
 
     @Override
-    public Map<String, Map<String, Long>> getCountryStats(String platform, String timeFilter) {
+    public Map<String, Map<String, Map<String, Long>>> getCountryStats(String platform, String timeFilter) {
         return dataManager.getCountryStats(platform, timeFilter);
     }
 
     @Override
-    public Map<String, Map<String, Long>> compareCountries(String platform1, String platform2) {
-        Map<String, Map<String, Long>> stats1 = getCountryStats(platform1, null);
-        Map<String, Map<String, Long>> stats2 = getCountryStats(platform2, null);
-        
-        // Create a result map to store comparison data
-        Map<String, Map<String, Long>> comparison = new HashMap<>();
-        
-        // Process each country tier
-        for (String tier : stats1.keySet()) {
-            Map<String, Long> tierStats = new HashMap<>();
-            Map<String, Long> platform1Stats = stats1.getOrDefault(tier, new HashMap<>());
-            Map<String, Long> platform2Stats = stats2.getOrDefault(tier, new HashMap<>());
-            
-            // Calculate totals for each platform
-            long platform1Total = platform1Stats.values().stream().mapToLong(Long::valueOf).sum();
-            long platform2Total = platform2Stats.values().stream().mapToLong(Long::valueOf).sum();
-            
-            // Store comparison metrics
-            tierStats.put(platform1 + "_total", platform1Total);
-            tierStats.put(platform2 + "_total", platform2Total);
-            tierStats.put("difference", platform1Total - platform2Total);
-            tierStats.put("percent_difference", calculatePercentage(platform1Total, platform2Total));
-            
-            comparison.put(tier, tierStats);
-        }
-        
-        // Add any tiers that are only in platform2
-        for (String tier : stats2.keySet()) {
-            if (!comparison.containsKey(tier)) {
-                Map<String, Long> tierStats = new HashMap<>();
-                Map<String, Long> platform2Stats = stats2.get(tier);
+    public Map<String, Map<String, Map<String, Long>>> compareCountries(String platform1, String platform2) {
+        Map<String, Map<String, Map<String, Long>>> stats1 = getCountryStats(platform1, null);
+        Map<String, Map<String, Map<String, Long>>> stats2 = getCountryStats(platform2, null);
+        Map<String, Map<String, Map<String, Long>>> comparison = new HashMap<>();
+
+        // Combine stats from both platforms
+        for (Map.Entry<String, Map<String, Map<String, Long>>> tierEntry : stats1.entrySet()) {
+            String tier = tierEntry.getKey();
+            for (Map.Entry<String, Map<String, Long>> countryEntry : tierEntry.getValue().entrySet()) {
+                String country = countryEntry.getKey();
+                Map<String, Long> clientStats = countryEntry.getValue();
+                long total1 = clientStats.values().stream().mapToLong(Long::longValue).sum();
                 
-                long platform2Total = platform2Stats.values().stream().mapToLong(Long::valueOf).sum();
-                
-                tierStats.put(platform1 + "_total", 0L);
-                tierStats.put(platform2 + "_total", platform2Total);
-                tierStats.put("difference", -platform2Total);
-                tierStats.put("percent_difference", -100L);
-                
-                comparison.put(tier, tierStats);
+                // Get corresponding stats from platform2
+                long total2 = 0;
+                if (stats2.containsKey(tier) && stats2.get(tier).containsKey(country)) {
+                    total2 = stats2.get(tier).get(country).values().stream().mapToLong(Long::longValue).sum();
+                }
+
+                Map<String, Map<String, Long>> countryMap = comparison.computeIfAbsent(tier, k -> new HashMap<>());
+                Map<String, Long> platformMap = new HashMap<>();
+                platformMap.put(platform1, total1);
+                platformMap.put(platform2, total2);
+                countryMap.put(country, platformMap);
             }
         }
-        
+
+        // Add countries that are only in platform2
+        for (Map.Entry<String, Map<String, Map<String, Long>>> tierEntry : stats2.entrySet()) {
+            String tier = tierEntry.getKey();
+            for (Map.Entry<String, Map<String, Long>> countryEntry : tierEntry.getValue().entrySet()) {
+                String country = countryEntry.getKey();
+                if (!stats1.containsKey(tier) || !stats1.get(tier).containsKey(country)) {
+                    Map<String, Long> clientStats = countryEntry.getValue();
+                    long total2 = clientStats.values().stream().mapToLong(Long::longValue).sum();
+                    Map<String, Map<String, Long>> countryMap = comparison.computeIfAbsent(tier, k -> new HashMap<>());
+                    Map<String, Long> platformMap = new HashMap<>();
+                    platformMap.put(platform1, 0L);
+                    platformMap.put(platform2, total2);
+                    countryMap.put(country, platformMap);
+                }
+            }
+        }
+
         return comparison;
     }
 
@@ -176,13 +177,23 @@ public class EasyStatsAPIImpl implements EasyStatsAPI {
     }
 
     @Override
-    public boolean addHostnameToCampaign(String name, String hostname) {
-        return dataManager.addHostnameToCampaign(name, hostname);
+    public boolean addHostnameToCampaign(String campaignName, String hostname) {
+        try {
+            dataManager.addHostnameToCampaign(campaignName, hostname);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override
-    public boolean removeHostnameFromCampaign(String name, String hostname) {
-        return dataManager.removeHostnameFromCampaign(name, hostname);
+    public boolean removeHostnameFromCampaign(String campaignName, String hostname) {
+        try {
+            dataManager.removeHostnameFromCampaign(campaignName, hostname);
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override
@@ -240,5 +251,15 @@ public class EasyStatsAPIImpl implements EasyStatsAPI {
     private long calculatePercentage(long value1, long value2) {
         if (value2 == 0) return 0;
         return (value1 - value2) * 100 / value2;
+    }
+
+    @Override
+    public Map<String, Object> getPlayerCountStats(String platform) {
+        return plugin.getDataManager().getPlayerCountStats(platform);
+    }
+
+    @Override
+    public Map<String, Object> getGlobalPlayerCountStats() {
+        return plugin.getDataManager().getPlayerCountStats("global");
     }
 } 

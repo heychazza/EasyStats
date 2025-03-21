@@ -5,13 +5,13 @@ import gg.gianluca.easystats.api.EasyStatsAPIImpl;
 import gg.gianluca.easystats.command.base.BaseCommand;
 import gg.gianluca.easystats.command.subcommands.*;
 import gg.gianluca.easystats.data.DataManager;
-import gg.gianluca.easystats.database.DatabaseFactory;
 import gg.gianluca.easystats.expansion.EasyStatsExpansion;
 import gg.gianluca.easystats.listener.PlayerListener;
 import gg.gianluca.easystats.session.SessionManager;
 import gg.gianluca.easystats.util.DependencyManager;
 import gg.gianluca.easystats.util.GeoIPManager;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
+import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
@@ -27,28 +27,13 @@ public class EasyStats extends JavaPlugin {
 
     @Override
     public void onEnable() {
-        // Save default config
-        saveDefaultConfig();
-
         // Initialize managers
-        this.dependencyManager = new DependencyManager(this);
         this.dataManager = new DataManager(this);
         this.sessionManager = new SessionManager();
-        this.api = new EasyStatsAPIImpl(this);
         this.geoIPManager = new GeoIPManager(this);
 
         // Register commands
-        getCommand("easystats").setExecutor(new EasyStatsCommand(this));
-
-        // Register event listeners
-        getServer().getPluginManager().registerEvents(new PlayerListener(this), this);
-
-        // Register PlaceholderAPI expansion if available
-        if (dependencyManager.isPlaceholderAPIEnabled()) {
-            PlaceholderExpansion expansion = new EasyStatsExpansion(this);
-            expansion.register();
-            getLogger().info("PlaceholderAPI expansion registered successfully!");
-        }
+        this.getCommand("easystats").setExecutor(this);
 
         // Register subcommands
         subcommands.put("reload", new ReloadCommand(this));
@@ -58,6 +43,27 @@ public class EasyStats extends JavaPlugin {
         subcommands.put("campaign", new CampaignCommand(this));
         subcommands.put("session", new SessionCommand(this));
         subcommands.put("export", new ExportCommand(this));
+        subcommands.put("playercount", new PlayerCountCommand(this));
+
+        // Register PlaceholderAPI expansion
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new EasyStatsExpansion(this).register();
+        }
+
+        // Initialize API
+        this.api = new EasyStatsAPIImpl(this);
+
+        // Start task to record player counts
+        int interval = getConfig().getInt("player_count.interval", 300); // Default 5 minutes
+        Bukkit.getScheduler().runTaskTimer(this, () -> {
+            for (String hostname : dataManager.getAllHostnames()) {
+                int count = Bukkit.getOnlinePlayers().stream()
+                    .filter(p -> p.getAddress().getHostName().equals(hostname))
+                    .mapToInt(p -> 1)
+                    .sum();
+                dataManager.recordPlayerCount(hostname, count);
+            }
+        }, interval * 20L, interval * 20L);
     }
 
     @Override

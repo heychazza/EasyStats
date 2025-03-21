@@ -2,11 +2,33 @@
   "export_date": "2024-03-20T15:30:00",
   "timeframe": "30d",
   "timeframe_days": "30",
+  "player_count": {
+    "current": 123,
+    "averages": {
+      "24h": 98,
+      "7d": 105,
+      "14d": 108,
+      "30d": 102
+    },
+    "peak_count": 456,
+    "peak_time": "2024-03-15 18:30:00"
+  },
   "platform_stats": {
     "play.example.com": {
       "total": 1500,
       "java": 1000,
-      "bedrock": 500
+      "bedrock": 500,
+      "player_count": {
+        "current": 45,
+        "averages": {
+          "24h": 38,
+          "7d": 42,
+          "14d": 40,
+          "30d": 39
+        },
+        "peak_count": 156,
+        "peak_time": "2024-03-15 18:30:00"
+      }
     },
     "bedrock.example.com": {
       "total": 800,
@@ -21,7 +43,18 @@
     "mc.example.com": {
       "total": 2000,
       "java": 1500,
-      "bedrock": 500
+      "bedrock": 500,
+      "player_count": {
+        "current": 78,
+        "averages": {
+          "24h": 60,
+          "7d": 63,
+          "14d": 68,
+          "30d": 63
+        },
+        "peak_count": 300,
+        "peak_time": "2024-03-15 18:30:00"
+      }
     }
   },
   "revenue_stats": {
@@ -66,8 +99,6 @@
       "status": "active",
       "hostnames": [
         "play.example.com",
-        "bedrock.example.com",
-        "lobby.example.com",
         "mc.example.com"
       ],
       "join_stats": {
